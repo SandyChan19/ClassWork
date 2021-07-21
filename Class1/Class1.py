@@ -12,74 +12,50 @@ inputFile_h = inputPath + 'h_lvr_land_a.xml'
 outputfile1 = '..\\DataFile\\SaveData\\filter_a.csv'
 outputfile2 = '..\\DataFile\\SaveData\\filter_b.csv'
 
+def loadData(path):
+    tree = eTree.parse(path)
+    root = tree.getroot()
+    get_range = lambda col: range(len(col))
+    l = [{r[i].tag:r[i].text for i in get_range(r)} for r in root]
 
-tree = eTree.parse(inputFile_a)
-root = tree.getroot()
-get_range = lambda col: range(len(col))
-l = [{r[i].tag:r[i].text for i in get_range(r)} for r in root]
+    result = pd.DataFrame.from_dict(l)
 
-df_a = pd.DataFrame.from_dict(l)
+    return result
 
-tree = eTree.parse(inputFile_b)
-root = tree.getroot()
-get_range = lambda col: range(len(col))
-l = [{r[i].tag:r[i].text for i in get_range(r)} for r in root]
+def main():
+    df_a = loadData(inputFile_a)
+    df_b = loadData(inputFile_b)
+    df_e = loadData(inputFile_e)
+    df_f = loadData(inputFile_f)
+    df_h = loadData(inputFile_h)
 
-df_b = pd.DataFrame.from_dict(l)
+    df_all = df_a.append(df_b).append(df_e).append(df_f).append(df_h)
 
-tree = eTree.parse(inputFile_e)
-root = tree.getroot()
-get_range = lambda col: range(len(col))
-l = [{r[i].tag:r[i].text for i in get_range(r)} for r in root]
+    df_mask = (df_all['主要用途'] == '住家用') & (df_all['建物型態'].str.match('住宅大樓'))
+    filtered_df = df_all[df_mask]
 
-df_e = pd.DataFrame.from_dict(l)
+    filter_floor = filtered_df[filtered_df["總樓層數"].str.contains('十一層|十二層') == False]
 
-tree = eTree.parse(inputFile_f)
-root = tree.getroot()
-get_range = lambda col: range(len(col))
-l = [{r[i].tag:r[i].text for i in get_range(r)} for r in root]
+    filter_floor.to_csv(outputfile1, encoding ='utf_8_sig')
 
-df_f = pd.DataFrame.from_dict(l)
+    df_all['CarCnt'] = df_all['交易筆棟數'].str.split('位').str[1]
 
-tree = eTree.parse(inputFile_h)
-root = tree.getroot()
-get_range = lambda col: range(len(col))
-l = [{r[i].tag:r[i].text for i in get_range(r)} for r in root]
+    totalCnt = df_all['總價元'].count()
+    totalCarCnt = sum(pd.to_numeric(df_all['CarCnt']))
+    totalCarMoney = sum(pd.to_numeric(df_all['車位總價元']))
+    avgMoney = pd.to_numeric(df_all['總價元']).mean()
+    avgCarMoney = totalCarMoney / totalCarCnt
 
-df_h = pd.DataFrame.from_dict(l)
+    grades = {
+        "總件數": [totalCnt],
+        "總車位數": [totalCarCnt],
+        "平均總價元": [avgMoney],
+        "平均車位總價元": [avgCarMoney]
+    }
 
-df_all = df_a.append(df_b).append(df_e).append(df_f).append(df_h)
+    df2 = pd.DataFrame(grades)
+    df2.to_csv(outputfile2, encoding ='utf_8_sig')
 
-df_mask = (df_all['主要用途'] == '住家用') & (df_all['建物型態'].str.match('住宅大樓'))
-filtered_df = df_all[df_mask]
-
-filter_floor = filtered_df[filtered_df["總樓層數"].str.contains('十一層|十二層') == False]
-
-filter_floor.to_csv(outputfile1, encoding ='utf_8_sig')
-
-df_all['CarCnt'] = df_all['交易筆棟數'].str.split('位').str[1]
-
-totalCnt = df_all['總價元'].count()
-totalCarCnt = sum(pd.to_numeric(df_all['CarCnt']))
-totalCarMoney = sum(pd.to_numeric(df_all['車位總價元']))
-avgMoney = pd.to_numeric(df_all['總價元']).mean()
-avgCarMoney = totalCarMoney / totalCarCnt
-
-"""
-print('totalMoney = ', sum(pd.to_numeric(df_all['總價元'])))
-print('totalCnt = ', totalCnt)
-print('avgMoney = ', avgMoney)
-print('totalCarCnt = ', totalCarCnt)
-print('totalCarMoney = ', totalCarMoney)
-print('avgCarMoney = ', avgCarMoney)
-"""
-
-grades = {
-    "總件數": [totalCnt],
-    "總車位數": [totalCarCnt],
-    "平均總價元": [avgMoney],
-    "平均車位總價元": [avgCarMoney]
-}
-
-df2 = pd.DataFrame(grades)
-df2.to_csv(outputfile2, encoding ='utf_8_sig')
+if __name__ == '__main__':
+    main()
+    print('finish!')
