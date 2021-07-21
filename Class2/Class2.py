@@ -96,6 +96,7 @@ def getData(id):
                 lessorGender = '女'
             lessorLastname = str(room_data['linkInfo']['imName'])[0] 
 
+        renterGender = '不拘'
         if str(room_data['service']['rule']).__contains__('限女生'):
             renterGender = '女'
         if str(room_data['service']['rule']).__contains__('限男生'):
