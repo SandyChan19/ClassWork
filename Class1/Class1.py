@@ -22,6 +22,28 @@ def loadData(path):
 
     return result
 
+def convertChineseNumberToInt(seriesObj):
+    list = seriesObj.tolist()
+    result_list = []
+    common_used_numerals = {'一':'1', '二':'2', '三':'3', '四':'4', '五':'5', '六':'6', '七':'7', '八':'8', '九':'9', '十':'0'}
+    for i in range(len(list)):
+        item = str(list[i])
+        result_str = ''
+        for j in range(len(item)):
+            if j == 0:
+                if item[j] == '十':
+                    result_str = '1'
+                else:
+                    result_str = common_used_numerals.get(item[j])
+            else:
+                if item[j] == '十' and j < len(item) - 1:
+                    continue
+                else:
+                    result_str = result_str + common_used_numerals.get(item[j])
+        result_list.append(result_str)
+
+    return result_list  
+
 def main():
     df_a = loadData(inputFile_a)
     df_b = loadData(inputFile_b)
@@ -32,11 +54,12 @@ def main():
     df_all = df_a.append(df_b).append(df_e).append(df_f).append(df_h)
 
     df_mask = (df_all['主要用途'] == '住家用') & (df_all['建物型態'].str.match('住宅大樓'))
-    filtered_df = df_all[df_mask]
+    filtered_df = df_all[df_mask]   
 
-    filter_floor = filtered_df[filtered_df["總樓層數"].str.contains('十一層|十二層') == False]
+    filtered_df['floor_num'] = convertChineseNumberToInt(filtered_df['總樓層數'].str.replace('層', ''))
+    filtered_df = filtered_df[pd.to_numeric(filtered_df['floor_num']) >= 13]
 
-    filter_floor.to_csv(outputfile1, encoding ='utf_8_sig')
+    filtered_df.to_csv(outputfile1, encoding ='utf_8_sig')
 
     df_all['CarCnt'] = df_all['交易筆棟數'].str.split('位').str[1]
 
