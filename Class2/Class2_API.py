@@ -28,7 +28,7 @@ Swagger(app)
 def api1():
 
     """
-    This is the class API
+    Get rental information. Query conditions: renters sex / rental location(counties).
     ---
     tags:
       - API-1
@@ -39,7 +39,7 @@ def api1():
         type: string
         required: true
         description: ex:男
-      - name: area
+      - name: counties
         in: query
         type: string
         required: true
@@ -98,17 +98,17 @@ def api1():
     """ 
 
     sex = ''
-    area = ''
+    counties = ''
     if 'sex' in request.args:
         query_sex = request.args['sex']
         common_sex = {'男':'女', '女':'男'}
         sex = common_sex.get(query_sex)
     
-    if 'area' in request.args:
-        area = request.args['area']
+    if 'counties' in request.args:
+        counties = request.args['counties']
 
     output = []
-    for x in newsdata.find({ 'renterGender': { '$ne' : sex }, 'area': area }):
+    for x in newsdata.find({ 'renterGender': { '$ne' : sex }, 'area': counties }):
         output.append({"title": x['title'], "area": x['area'], "section": x['section'], "houseKind": x['houseKind']
         , "houseType'": x['houseType'], "mobile": x['mobile'], "price": x['price'], "renterGender": x['renterGender']
         , "lessor": x['lessor'] })
@@ -119,7 +119,7 @@ def api1():
 @app.route('/rentApi/api2/<string:phone_number>', methods=['GET'])
 def api2(phone_number):
     """
-    This is the class API
+    Get rental information. Query conditions: contact number.
     ---
     tags:
       - API-2
@@ -191,17 +191,17 @@ def api2(phone_number):
 @app.route('/rentApi/api3', methods=['GET'])
 def api3():
     """
-    This is the class API
+    Get rental information. Query conditions: homeowner.
     ---
     tags:
       - API-3
     produces: application/json,
     parameters:
       - name: isLessor
-        in: path
-        type: bool
+        in: query
+        type: string
         required: true
-        description: ex:true
+        description: ex:Y
     responses:
       490:
         description: Data not found!
@@ -251,8 +251,16 @@ def api3():
 
     """ 
 
+    query = ''
+    if 'isLessor' in request.args:
+        isLessor = request.args['isLessor']
+        if isLessor == 'Y':
+          query = { 'lessorRole': '屋主' }
+        else:
+          query = { 'lessorRole': { '$ne' : '屋主' } }
+
     output = []
-    for x in newsdata.find({ 'lessorRole': { '$ne' : '屋主' } }):
+    for x in newsdata.find(query):
         output.append({"title": x['title'], "area": x['area'], "section": x['section'], "houseKind": x['houseKind']
         , "houseType'": x['houseType'], "mobile": x['mobile'], "price": x['price'], "lessor": x['lessor'] })
 
@@ -262,24 +270,24 @@ def api3():
 @app.route('/rentApi/api4', methods=['GET'])
 def api4():
     """
-    This is the class API
+    Get rental information. Query conditions: lessor's sex / rental location(counties) / lessor's lastname.
     ---
     tags:
       - API-4
     produces: application/json,
     parameters:
-      - name: lessor_gender
-        in: path
+      - name: sex
+        in: query
         type: string
         required: true
         description: ex:男
-      - name: area
-        in: path
+      - name: counties
+        in: query
         type: string
         required: true
         description: ex:台北
-      - name: lessor_lastname
-        in: path
+      - name: lastname
+        in: query
         type: string
         required: true
         description: ex:吳
@@ -336,8 +344,20 @@ def api4():
 
     """ 
 
+    sex = ''
+    counties = ''
+    lastname = ''
+    if 'sex' in request.args:
+        sex = request.args['sex']
+    
+    if 'counties' in request.args:
+        counties = request.args['counties']
+
+    if 'lastname' in request.args:
+        lastname = request.args['lastname']
+
     output = []
-    for x in newsdata.find({ 'area': '台北', 'lessorGender': '女', 'lessorLastname': '吳' }):
+    for x in newsdata.find({ 'area': counties, 'lessorGender': sex, 'lessorLastname': lastname }):
         output.append({"title": x['title'], "area": x['area'], "section": x['section'], "houseKind": x['houseKind']
         , "houseType'": x['houseType'], "mobile": x['mobile'], "price": x['price'], "lessor": x['lessor'], "lessorGender": x['lessorGender'], "lessorLastname": x['lessorLastname'] })
 
