@@ -34,13 +34,13 @@ def api1():
       - API-1
     produces: application/json,
     parameters:
-      - name: renter_gender
-        in: path
+      - name: sex
+        in: query
         type: string
         required: true
         description: ex:男
       - name: area
-        in: path
+        in: query
         type: string
         required: true
         description: ex:台北
@@ -97,8 +97,18 @@ def api1():
 
     """ 
 
+    sex = ''
+    area = ''
+    if 'sex' in request.args:
+        query_sex = request.args['sex']
+        common_sex = {'男':'女', '女':'男'}
+        sex = common_sex.get(query_sex)
+    
+    if 'area' in request.args:
+        area = request.args['area']
+
     output = []
-    for x in newsdata.find({ 'renterGender': { '$ne' : '女' }, 'area': '新北' }):
+    for x in newsdata.find({ 'renterGender': { '$ne' : sex }, 'area': area }):
         output.append({"title": x['title'], "area": x['area'], "section": x['section'], "houseKind": x['houseKind']
         , "houseType'": x['houseType'], "mobile": x['mobile'], "price": x['price'], "renterGender": x['renterGender']
         , "lessor": x['lessor'] })
