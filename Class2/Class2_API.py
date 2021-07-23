@@ -105,9 +105,9 @@ def api1():
 
     return jsonify({'result' : output})
 
-#以【聯絡電話】查詢租屋物件 , ex:http://127.0.0.1:5000/rentApi/api2?t=02-25569017
-@app.route('/rentApi/api2', methods=['GET'])
-def api2():
+#以【聯絡電話】查詢租屋物件 , ex:http://127.0.0.1:5000/rentApi/api2/02-25569017
+@app.route('/rentApi/api2/<string:phone_number>', methods=['GET'])
+def api2(phone_number):
     """
     This is the class API
     ---
@@ -115,7 +115,7 @@ def api2():
       - API-2
     produces: application/json,
     parameters:
-      - name: phone-number
+      - name: phone_number
         in: path
         type: string
         required: true
@@ -168,9 +168,10 @@ def api2():
                     default: 張先生       
 
     """ 
+    query = {"$or":[{'mobile' : phone_number}, {'phone' : phone_number}]}
 
     output = []
-    for x in newsdata.find({ 'lessorRole': { '$ne' : '屋主' } }):
+    for x in newsdata.find(query):
         output.append({"title": x['title'], "area": x['area'], "section": x['section'], "houseKind": x['houseKind']
         , "houseType'": x['houseType'], "mobile": x['mobile'], "price": x['price'], "lessor": x['lessor'] })
 
